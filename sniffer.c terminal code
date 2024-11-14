@@ -1,0 +1,2 @@
+gcc sniffer.c -o sniffer -lpcap -lpthread
+sudo ./sniffer
