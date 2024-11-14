@@ -1,0 +1,60 @@
+import tkinter as tk
+from tkinter import ttk
+import pandas as pd
+
+# Function to load and process packet data from text file
+def load_packets():
+    try:
+        packets = []
+        with open("packet_data.txt", "r") as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) == 7:
+                    packets.append({
+                        "src_ip": parts[0],
+                        "dst_ip": parts[1],
+                        "protocol": int(parts[2]),
+                        "src_port": int(parts[3]),
+                        "dst_port": int(parts[4]),
+                        "syn_flag": int(parts[5]),
+                        "ack_flag": int(parts[6])
+                    })
+        return pd.DataFrame(packets)
+    except FileNotFoundError:
+        print("Error: packet_data.txt not found.")
+        return pd.DataFrame()
+
+# Function to refresh the table with new data
+def refresh_table():
+    packets_df = load_packets()
+    for row in table.get_children():
+        table.delete(row)
+    if not packets_df.empty:
+        for _, packet in packets_df.iterrows():
+            table.insert("", "end", values=(
+                packet['src_ip'], packet['dst_ip'], packet['protocol'],
+                packet['src_port'], packet['dst_port'], packet['syn_flag'], packet['ack_flag']
+            ))
+    else:
+        print("No data to display.")
+
+# Create the Tkinter window
+root = tk.Tk()
+root.title("Packet Sniffer Data")
+
+# Define columns for the table
+columns = ("Source IP", "Destination IP", "Protocol", "Source Port", "Destination Port", "SYN Flag", "ACK Flag")
+table = ttk.Treeview(root, columns=columns, show="headings")
+for col in columns:
+    table.heading(col, text=col)
+table.pack(fill="both", expand=True)
+
+# Add a Refresh button
+refresh_button = tk.Button(root, text="Refresh", command=refresh_table)
+refresh_button.pack(pady=10)
+
+# Initial population of the table
+refresh_table()
+
+# Start the Tkinter event loop
+root.mainloop()
